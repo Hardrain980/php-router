@@ -1,5 +1,5 @@
 {
-    "name": "leo/router",
+    "name": "leo98/router",
     "description": "A wrapper of fast-route features PSR-7 and PSR-15 compatibility",
     "type": "library",
     "license": "Apache-2.0",
