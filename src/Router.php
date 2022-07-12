@@ -96,51 +96,51 @@ class Router implements RequestHandlerInterface
 		return $response;
 	}
 
-	public function get(string $path, callable $handler): self
+	public function get(string $path, HandlerInterface $handler): self
 	{
 		return $this->addRoute($path, $handler, ['GET']);
 	}
 
-	public function post(string $path, callable $handler): self
+	public function post(string $path, HandlerInterface $handler): self
 	{
 		return $this->addRoute($path, $handler, ['POST']);
 	}
 
-	public function put(string $path, callable $handler): self
+	public function put(string $path, HandlerInterface $handler): self
 	{
 		return $this->addRoute($path, $handler, ['PUT']);
 	}
 
-	public function patch(string $path, callable $handler): self
+	public function patch(string $path, HandlerInterface $handler): self
 	{
 		return $this->addRoute($path, $handler, ['PATCH']);
 	}
 
-	public function delete(string $path, callable $handler): self
+	public function delete(string $path, HandlerInterface $handler): self
 	{
 		return $this->addRoute($path, $handler, ['DELETE']);
 	}
 
-	public function head(string $path, callable $handler): self
+	public function head(string $path, HandlerInterface $handler): self
 	{
 		return $this->addRoute($path, $handler, ['HEAD']);
 	}
 
-	public function options(string $path, callable $handler): self
+	public function options(string $path, HandlerInterface $handler): self
 	{
 		return $this->addRoute($path, $handler, ['OPTIONS']);
 	}
 
 	/**
 	 * Add new route to router and create a new instance
-	 * @param  string        $path    Path of new route
-	 * @param  callable      $handler Request handler
-	 * @param  array<string> $methods Methods of new route
-	 * @return self                   New router instance
+	 * @param  string           $path    Path of new route
+	 * @param  HandlerInterface $handler Request handler
+	 * @param  array<string>    $methods Methods of new route
+	 * @return self                      New router instance
 	 */
 	public function addRoute(
 		string $path,
-		callable $handler,
+		HandlerInterface $handler,
 		array $methods
 	): self
 	{

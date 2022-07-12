@@ -1,10 +1,12 @@
 <?php
 
+use Leo\Router\HandlerInterface;
 use Leo\Router\HttpException\HttpExceptionInterface;
 use Leo\Router\Router;
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -17,11 +19,14 @@ class RouterTest extends TestCase
 	 */
 	public function testMH(): void
 	{
-		$r = (new Router(host:'domain.tld'))
-			->get(
-				path:'/',
-				handler:function ($r) {return new Response(status:200, body:'Yeah!');}
-			);
+		$h = new class implements HandlerInterface {
+			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+			{
+				return new Response(status:200, body:'Yeah!');
+			}
+		};
+
+		$r = (new Router(host:'domain.tld'))->get(path:'/', handler:$h);
 
 		$rs = $r->handle(new ServerRequest(method:'GET', uri:'http://hacker.tld/'));
 
@@ -33,11 +38,14 @@ class RouterTest extends TestCase
 	 */
 	public function testMP(): void
 	{
-		$r = (new Router(port:8080))
-			->get(
-				path:'/',
-				handler:function ($r) {return new Response(status:200, body:'Yeah!');}
-			);
+		$h = new class implements HandlerInterface {
+			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+			{
+				return new Response(status:200, body:'Yeah!');
+			}
+		};
+
+		$r = (new Router(port:8080))->get(path:'/', handler:$h);
 
 		$rs = $r->handle(new ServerRequest(method:'GET', uri:'http://domain.tld:9090/'));
 
@@ -49,11 +57,14 @@ class RouterTest extends TestCase
 	 */
 	public function testMS(): void
 	{
-		$r = (new Router(scheme:'https'))
-			->get(
-				path:'/',
-				handler:function ($r) {return new Response(status:200, body:'Yeah!');}
-			);
+		$h = new class implements HandlerInterface {
+			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+			{
+				return new Response(status:200, body:'Yeah!');
+			}
+		};
+
+		$r = (new Router(scheme:'https'))->get(path:'/', handler:$h);
 
 		$rs = $r->handle(new ServerRequest(method:'GET', uri:'http://domain.tld/'));
 
@@ -62,11 +73,14 @@ class RouterTest extends TestCase
 
 	public function testCallHandlerForUncaughtException(): void
 	{
-		$r = (new Router())
-			->get(
-				path:'/',
-				handler:function ($r) {throw new \Exception();}
-			);
+		$h = new class implements HandlerInterface {
+			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+			{
+				throw new \Exception();
+			}
+		};
+
+		$r = (new Router())->get(path:'/', handler:$h);
 
 		$rs = $r->handle(new ServerRequest(method:'GET', uri:'http://domain.tld/'));
 
@@ -77,13 +91,14 @@ class RouterTest extends TestCase
 	{
 		$this->expectException(HttpExceptionInterface::class);
 
-		$r = (new Router())
-			->get(
-				path:'/',
-				handler:function ($r) {
-					throw new class extends \Exception implements \Leo\Router\HttpException\HttpExceptionInterface {};
-				}
-			);
+		$h = new class implements HandlerInterface {
+			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+			{
+				throw new class extends \Exception implements \Leo\Router\HttpException\HttpExceptionInterface {};
+			}
+		};
+
+		$r = (new Router())->get(path:'/', handler:$h);
 
 		$r->handle(new ServerRequest(method:'GET', uri:'http://domain.tld/'));
 	}
@@ -93,11 +108,14 @@ class RouterTest extends TestCase
 	 */
 	public function testMNA(): void
 	{
-		$r = (new Router())
-			->get(
-				path:'/',
-				handler:function ($r) {return new Response(status:200, body:'Yeah!');}
-			);
+		$h = new class implements HandlerInterface {
+			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+			{
+				return new Response(status:200, body:'Yeah!');
+			}
+		};
+
+		$r = (new Router())->get(path:'/', handler:$h);
 
 		$rs = $r->handle(new ServerRequest(method:'PUT', uri:'http://domain.tld/'));
 
@@ -109,11 +127,14 @@ class RouterTest extends TestCase
 	 */
 	public function testRNF(): void
 	{
-		$r = (new Router())
-			->get(
-				path:'/',
-				handler:function ($r) {return new Response(status:200, body:'Yeah!');}
-			);
+		$h = new class implements HandlerInterface {
+			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+			{
+				return new Response(status:200, body:'Yeah!');
+			}
+		};
+
+		$r = (new Router())->get(path:'/', handler:$h);
 
 		$rs = $r->handle(new ServerRequest(method:'GET', uri:'http://domain.tld/not/exist'));
 
@@ -122,11 +143,14 @@ class RouterTest extends TestCase
 
 	public function testRouteAddingShortcuts(): void
 	{
-		$h = function (ServerRequestInterface $r) {
-			return new Response(
-				status:200,
-				body:"Method: {$r->getMethod()}",
-			);
+		$h = new class implements HandlerInterface {
+			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+			{
+				return new Response(
+					status:200,
+					body:"Method: {$request->getMethod()}",
+				);
+			}
 		};
 
 		$r = (new Router())
