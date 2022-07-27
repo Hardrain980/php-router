@@ -57,12 +57,18 @@ class Router implements RequestHandlerInterface
 	 */
 	private ExceptionHandlerInterface $exception_handler;
 
+	/**
+	 * @var string Name of router params attached to request attributes
+	 */
+	private string $params_attribute_name;
+
 	public function __construct(
 		?string $prefix = null,
 		?string $host = null,
 		?int $port = null,
 		?string $scheme = null,
 		?ExceptionHandlerInterface $exception_handler = null,
+		string $params_attribute_name = 'ROUTER_PARAMS',
 	)
 	{
 		$this->prefix = $prefix;
@@ -74,6 +80,7 @@ class Router implements RequestHandlerInterface
 			routeParser:new \FastRoute\RouteParser\Std(),
 			dataGenerator:new \FastRoute\DataGenerator\GroupCountBased(),
 		);
+		$this->params_attribute_name = $params_attribute_name;
 	}
 
 	/**
@@ -96,51 +103,53 @@ class Router implements RequestHandlerInterface
 		return $response;
 	}
 
-	public function get(string $path, HandlerInterface $handler): self
+	// @codeCoverageIgnoreStart
+	public function get(string $path, RequestHandlerInterface $handler): self
 	{
 		return $this->addRoute($path, $handler, ['GET']);
 	}
 
-	public function post(string $path, HandlerInterface $handler): self
+	public function post(string $path, RequestHandlerInterface $handler): self
 	{
 		return $this->addRoute($path, $handler, ['POST']);
 	}
 
-	public function put(string $path, HandlerInterface $handler): self
+	public function put(string $path, RequestHandlerInterface $handler): self
 	{
 		return $this->addRoute($path, $handler, ['PUT']);
 	}
 
-	public function patch(string $path, HandlerInterface $handler): self
+	public function patch(string $path, RequestHandlerInterface $handler): self
 	{
 		return $this->addRoute($path, $handler, ['PATCH']);
 	}
 
-	public function delete(string $path, HandlerInterface $handler): self
+	public function delete(string $path, RequestHandlerInterface $handler): self
 	{
 		return $this->addRoute($path, $handler, ['DELETE']);
 	}
 
-	public function head(string $path, HandlerInterface $handler): self
+	public function head(string $path, RequestHandlerInterface $handler): self
 	{
 		return $this->addRoute($path, $handler, ['HEAD']);
 	}
 
-	public function options(string $path, HandlerInterface $handler): self
+	public function options(string $path, RequestHandlerInterface $handler): self
 	{
 		return $this->addRoute($path, $handler, ['OPTIONS']);
 	}
+	// @codeCoverageIgnoreEnd
 
 	/**
 	 * Add new route to router and create a new instance
-	 * @param  string           $path    Path of new route
-	 * @param  HandlerInterface $handler Request handler
-	 * @param  array<string>    $methods Methods of new route
-	 * @return self                      New router instance
+	 * @param  string                  $path    Path of new route
+	 * @param  RequestHandlerInterface $handler Request handler
+	 * @param  array<string>           $methods Methods of new route
+	 * @return self                             New router instance
 	 */
 	public function addRoute(
 		string $path,
-		HandlerInterface $handler,
+		RequestHandlerInterface $handler,
 		array $methods
 	): self
 	{
@@ -192,7 +201,9 @@ class Router implements RequestHandlerInterface
 
 		switch ($route[0]) {
 			case Dispatcher::FOUND:
-				$response = $route[1]($request, $route[2]);
+				$request = $request
+					->withAttribute($this->params_attribute_name, $route[2]);
+				$response = $route[1]->handle($request);
 				break;
 
 			case Dispatcher::METHOD_NOT_ALLOWED:

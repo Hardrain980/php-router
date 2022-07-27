@@ -8,6 +8,7 @@ use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * @testdox Class: \Leo\Router\Router
@@ -19,8 +20,8 @@ class RouterTest extends TestCase
 	 */
 	public function testMH(): void
 	{
-		$h = new class implements HandlerInterface {
-			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+		$h = new class implements RequestHandlerInterface {
+			public function handle(ServerRequestInterface $request): ResponseInterface
 			{
 				return new Response(status:200, body:'Yeah!');
 			}
@@ -38,8 +39,8 @@ class RouterTest extends TestCase
 	 */
 	public function testMP(): void
 	{
-		$h = new class implements HandlerInterface {
-			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+		$h = new class implements RequestHandlerInterface {
+			public function handle(ServerRequestInterface $request): ResponseInterface
 			{
 				return new Response(status:200, body:'Yeah!');
 			}
@@ -57,8 +58,8 @@ class RouterTest extends TestCase
 	 */
 	public function testMS(): void
 	{
-		$h = new class implements HandlerInterface {
-			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+		$h = new class implements RequestHandlerInterface {
+			public function handle(ServerRequestInterface $request): ResponseInterface
 			{
 				return new Response(status:200, body:'Yeah!');
 			}
@@ -73,8 +74,8 @@ class RouterTest extends TestCase
 
 	public function testCallHandlerForUncaughtException(): void
 	{
-		$h = new class implements HandlerInterface {
-			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+		$h = new class implements RequestHandlerInterface {
+			public function handle(ServerRequestInterface $request): ResponseInterface
 			{
 				throw new \Exception();
 			}
@@ -91,8 +92,8 @@ class RouterTest extends TestCase
 	{
 		$this->expectException(HttpExceptionInterface::class);
 
-		$h = new class implements HandlerInterface {
-			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+		$h = new class implements RequestHandlerInterface {
+			public function handle(ServerRequestInterface $request): ResponseInterface
 			{
 				throw new class extends \Exception implements \Leo\Router\HttpException\HttpExceptionInterface {};
 			}
@@ -108,8 +109,8 @@ class RouterTest extends TestCase
 	 */
 	public function testMNA(): void
 	{
-		$h = new class implements HandlerInterface {
-			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+		$h = new class implements RequestHandlerInterface {
+			public function handle(ServerRequestInterface $request): ResponseInterface
 			{
 				return new Response(status:200, body:'Yeah!');
 			}
@@ -127,8 +128,8 @@ class RouterTest extends TestCase
 	 */
 	public function testRNF(): void
 	{
-		$h = new class implements HandlerInterface {
-			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+		$h = new class implements RequestHandlerInterface {
+			public function handle(ServerRequestInterface $request): ResponseInterface
 			{
 				return new Response(status:200, body:'Yeah!');
 			}
@@ -141,72 +142,28 @@ class RouterTest extends TestCase
 		$this->assertSame(404, $rs->getStatusCode());
 	}
 
-	public function testRouteAddingShortcuts(): void
+	public function testHandleRequestsNormally(): void
 	{
-		$h = new class implements HandlerInterface {
-			public function __invoke(ServerRequestInterface $request, array $params): ResponseInterface
+		$h = new class implements RequestHandlerInterface {
+			public function handle(ServerRequestInterface $request): ResponseInterface
 			{
-				return new Response(
-					status:200,
-					body:"Method: {$request->getMethod()}",
-				);
+				return new Response(status:200, body:'Yeah!');
 			}
 		};
 
 		$r = (new Router())
-			->get('/', $h)
-			->post('/', $h)
-			->put('/', $h)
-			->patch('/', $h)
-			->delete('/', $h)
-			->head('/', $h)
-			->options('/', $h);
+			->get('/', $h);
 
-		$this->assertSame('Method: GET',
+		$this->assertSame(200,
 			$r->handle(new ServerRequest(
 				method:'GET',
 				uri:'http://domain.tld/',
-			))->getBody()->__toString()
+			))->getStatusCode()
 		);
 
-		$this->assertSame('Method: POST',
+		$this->assertSame('Yeah!',
 			$r->handle(new ServerRequest(
-				method:'POST',
-				uri:'http://domain.tld/',
-			))->getBody()->__toString()
-		);
-
-		$this->assertSame('Method: PUT',
-			$r->handle(new ServerRequest(
-				method:'PUT',
-				uri:'http://domain.tld/',
-			))->getBody()->__toString()
-		);
-
-		$this->assertSame('Method: PATCH',
-			$r->handle(new ServerRequest(
-				method:'PATCH',
-				uri:'http://domain.tld/',
-			))->getBody()->__toString()
-		);
-
-		$this->assertSame('Method: DELETE',
-			$r->handle(new ServerRequest(
-				method:'DELETE',
-				uri:'http://domain.tld/',
-			))->getBody()->__toString()
-		);
-
-		$this->assertSame('Method: HEAD',
-			$r->handle(new ServerRequest(
-				method:'HEAD',
-				uri:'http://domain.tld/',
-			))->getBody()->__toString()
-		);
-
-		$this->assertSame('Method: OPTIONS',
-			$r->handle(new ServerRequest(
-				method:'OPTIONS',
+				method:'GET',
 				uri:'http://domain.tld/',
 			))->getBody()->__toString()
 		);
